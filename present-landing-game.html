@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Present Landing</title>
+
+<script src="https://d309knd7es5f10.cloudfront.net/createjs_1.1_min.js"></script>
+<script src="https://d309knd7es5f10.cloudfront.net/zim_9.3.0.js"></script>
+
+<script>
+
+var scaling = "fit";
+var width = 1024;
+var height = 768;
+var color = "#E9D9CB";
+var outerColor = "#5A4448";
+var assets = ["christmas-tree.png", "present1.png", "present2.png", "present3.png", "present4.png", "present5.png", "present6.png", "present7.png", "present8.png", "present9.png"];
+var path = "assets/";
+var frame = new Frame(scaling, width, height, color, outerColor, assets, path, new Waiter({foregroundColor:"#BD2927", backgroundColor:"#005302"}));
+
+frame.on("ready", function() {
+zog("Ready from ZIM Frame");
+
+var stage = frame.stage;
+var stageW = frame.width;
+var stageH = frame.height;
+
+var background = frame.asset("christmas-tree.png").addTo(stage);
+// var present = new Rectangle(100, 100, green);
+// var shuffle = rand(1, 9);
+// var present = frame.asset("present"+shuffle+".png");
+var shuffle;
+var present;
+var presents = new Container().addTo();
+var droppedPresents = new Container().addTo();
+
+var controller;
+timeout(50, function () {
+	controller = new MotionController({
+		target:presents.getChildAt(0),
+		type:"keydown",
+		axis:"horizontal",
+		diagonal:false,
+		damp:1
+	});
+});
+// controlller when switching targets moves the present to where the last present was
+// not sure why or how to prevent that
+
+dropPresents();
+function dropPresents() {
+	// use an interval to randomly set the falling presents
+	interval(2000, function() {
+		shuffle = rand(1, 9);
+		present = frame.asset("present"+shuffle+".png")
+			.clone()
+    		// .reg(present.width/2, present.height/2)
+			// .pos(rand(present.width, stage.width-present.width))
+    		.pos(rand(200, 800))
+    		.addTo(presents);
+	}, null, true);
+}
+
+// speed of falling presents
+var speed = 2;
+// declare a count variable outside the ticker function and then inside use count++ in the hitTest
+// then if the count >= 15 do something
+var count = 1;
+
+Ticker.add(animate);
+function animate() {
+	loop(presents, function(present) {
+		// stop the falling item at the bottom of the stage
+		present.y+=speed;
+		if (present.y > stageH - 150) {
+			present.addTo(droppedPresents);
+			controller.target = presents.getChildAt(0);
+			// present.color=red;
+			return;
+			stage.update();
+		}
+		// if present hits one of the dropped presents remove it from the stage
+		if (droppedPresents.hitTestRect(present)) {
+			present.removeFrom();
+			controller.target = presents.getChildAt(0);
+			droppedPresents.count++;
+			return;
+			stage.update();
+		}
+		// if present has hit droppedPresents container more than 15 times game over
+		if (droppedPresents.count >= 15) {
+			Ticker.remove;
+			new Label({
+				text:"GAME OVER, TRY AGAIN",
+				size:50,
+				color:red,
+				backgroundColor:white,
+				backgroundBorderColor:red,
+				backgroundBorderWidth:5,
+				corner:10,
+				paddingHorizontal:50,
+				paddingVertical:25
+			}).centerReg().loc(535, 300);
+			timeout(5000, function(){
+				zgo("christmas-game-v2.html")
+			});
+		}
+    }, true)
+}
+
+// have to fit 7 or 8 presents to win?
+// need some way to verify if that happens
+// through the droppedPresents hit test?
+
+stage.update();
+
+});
+
+</script>
+
+<meta name="viewport" content="width=device-width, user-scalable=no" />
+
+</head>
+
+<body>
+<!-- Canvas with id="myCanvas" is made by ZIM Frame -->
+<!-- All assets from <a href="http://www.freepik.com">freepik</a> -->
+</body>
+</html>

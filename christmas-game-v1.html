@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Christmas Game</title>
+
+<script src="https://d309knd7es5f10.cloudfront.net/createjs_1.1_min.js"></script>
+<script src="https://d309knd7es5f10.cloudfront.net/zim_9.3.0.js"></script>
+
+<script>
+
+var scaling = "fit";
+var width = 1024;
+var height = 768;
+var color = light;
+var outerColor = dark;
+var assets = "christmas-tree.png";
+var path = "assets/";
+
+var frame = new Frame(scaling, width, height, color, outerColor, assets, path);
+frame.on("ready", function() {
+zog("Ready from ZIM Frame");
+
+var stage = frame.stage;
+var stageW = frame.width;
+var stageH = frame.height;
+
+// Start game
+var background = frame.asset("christmas-tree.png").addTo(stage);
+var controller;
+startGame();
+function startGame() {
+	// Add ticker to run animation
+	Ticker.add(animate);
+	// Call the function to drop presents
+	dropPresents();
+	// Motion controller for presents
+	timeout(50, function () {
+		controller = new MotionController({
+			target:presents.getChildAt(0),
+			type:"keydown",
+			axis:"horizontal",
+			diagonal:false,
+			damp:1
+		});
+	});
+	// Control first present and after 5 seconds move to next one
+	interval(2000, function () {
+		// presents.getChildAt(0).removeFrom();
+		controller.immediate(presents.getChildAt(0).x, presents.getChildAt(0).y);
+		controller.target = presents.getChildAt(0);
+	});
+}
+
+// Presents
+var presents = new Container(stageW, stageH).addTo();
+var present = new Rectangle(100, 100, green);
+var droppedPresents = new Container().addTo();
+
+function dropPresents() {
+	// Use an interval to randomly set the falling presents
+	interval(1000, function() {
+    	present
+			.clone()
+    		.reg(present.width/2, present.height/2)
+    		.pos(rand(present.width, stage.width-present.width))
+    		.addTo(presents);
+	}, null, true);
+}
+
+// Animation
+var speed = 2;
+function animate() {
+	loop(presents, function(present) {
+		// Stop the falling item at the bottom of the stage
+		present.y+=speed;
+		if (present.y > stageH - 50) {
+			present.addTo(droppedPresents);
+			present.color=red;
+			return;
+		}
+		// If present hits one of the dropped presents remove it from the stage
+		if (droppedPresents.hitTestRect(present)) {
+			present.removeFrom();
+			controller.target = presents.getChildAt(0);
+			stage.update();
+		}
+    }, true)
+}
+
+stage.update();
+
+});
+
+</script>
+
+<meta name="viewport" content="width=device-width, user-scalable=no" />
+
+</head>
+
+<body>
+<!-- Canvas with id="myCanvas" is made by ZIM Frame -->
+</body>
+</html>
